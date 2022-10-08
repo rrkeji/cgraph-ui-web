@@ -1,15 +1,42 @@
 .container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
+  width: 100%;
 
-  .header {
-    display: flex;
-    height: 60px;
-    background-color: #ffffff;
+  .left {
+    width: 270px;
+    padding: 10px 5px;
+    border-right: 1px solid #dedede;
+
+    .search {
+      padding: 2px 2px;
+    }
+
+    .stencil {
+      margin-top: 10px;
+      min-height: 270px;
+    }
   }
 
-  .graph {
+  .center {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    height: 100%;
+
+    .header {
+      display: flex;
+      height: 40px;
+      background-color: #ffffff;
+      padding: 8px 8px;
+      border-bottom: 1px solid #dedede;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .graph {
+      flex: 1;
+    }
   }
 }

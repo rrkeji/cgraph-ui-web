@@ -118,6 +118,46 @@ export const graphRegister = (Graph: any) => {
 
         return others;
       },
+      ports: {
+        groups: {
+          // 输入链接桩群组定义
+          in: {
+            position: 'top',
+            attrs: {
+              circle: {
+                r: 2,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 2,
+                fill: '#fff',
+              },
+            },
+          },
+          // 输出链接桩群组定义
+          out: {
+            position: 'bottom',
+            attrs: {
+              circle: {
+                r: 2,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 2,
+                fill: '#fff',
+              },
+            },
+          },
+        },
+        items: [
+          {
+            id: 'port1',
+            group: 'in',
+          },
+          {
+            id: 'port5',
+            group: 'out',
+          },
+        ],
+      },
     },
     true,
   );
