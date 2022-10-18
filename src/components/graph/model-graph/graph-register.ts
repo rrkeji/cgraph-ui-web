@@ -121,7 +121,7 @@ export const graphRegister = (Graph: any) => {
       ports: {
         groups: {
           // 输入链接桩群组定义
-          in: {
+          topIn: {
             position: 'top',
             attrs: {
               circle: {
@@ -134,8 +134,34 @@ export const graphRegister = (Graph: any) => {
             },
           },
           // 输出链接桩群组定义
-          out: {
+          bottomOut: {
             position: 'bottom',
+            attrs: {
+              circle: {
+                r: 2,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 2,
+                fill: '#fff',
+              },
+            },
+          },
+          // 输出链接桩群组定义
+          leftIn: {
+            position: 'left',
+            attrs: {
+              circle: {
+                r: 2,
+                magnet: true,
+                stroke: '#31d0c6',
+                strokeWidth: 2,
+                fill: '#fff',
+              },
+            },
+          },
+          // 输出链接桩群组定义
+          rightOut: {
+            position: 'right',
             attrs: {
               circle: {
                 r: 2,
@@ -150,11 +176,19 @@ export const graphRegister = (Graph: any) => {
         items: [
           {
             id: 'port1',
-            group: 'in',
+            group: 'topIn',
           },
           {
-            id: 'port5',
-            group: 'out',
+            id: 'port2',
+            group: 'bottomOut',
+          },
+          {
+            id: 'port3',
+            group: 'leftIn',
+          },
+          {
+            id: 'port4',
+            group: 'rightOut',
           },
         ],
       },

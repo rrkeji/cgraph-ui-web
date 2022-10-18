@@ -1,12 +1,129 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactDom from 'react-dom';
 import useDimensions from 'react-use-dimensions';
 import classnames from 'classnames';
-import { Graph, ObjectExt, Cell, Addon } from '@antv/x6';
+import { Menu, Dropdown } from 'antd';
+import {
+  Graph,
+  ObjectExt,
+  Cell,
+  Addon,
+  Path,
+  ToolsView,
+  EdgeView,
+} from '@antv/x6';
 import { graphRegister } from './graph-register';
 
 import styles from './model-graph.less';
 
 graphRegister(Graph);
+
+class ContextMenuTool extends ToolsView.ToolItem<
+  EdgeView,
+  ContextMenuToolOptions
+> {
+  private knob?: HTMLDivElement;
+
+  private timer?: number;
+
+  render() {
+    if (!this.knob) {
+      this.knob = ToolsView.createElement('div', false) as HTMLDivElement;
+      this.knob.style.position = 'absolute';
+      this.container.appendChild(this.knob);
+    }
+    return this;
+  }
+
+  private toggleContextMenu(visible: boolean) {
+    ReactDom.unmountComponentAtNode(this.knob!);
+    document.removeEventListener('mousedown', this.onMouseDown);
+
+    if (visible) {
+      ReactDom.render(
+        <Dropdown
+          visible={true}
+          trigger={['contextMenu']}
+          overlay={this.options.menu}
+        >
+          <a />
+        </Dropdown>,
+        this.knob,
+      );
+      document.addEventListener('mousedown', this.onMouseDown);
+    }
+  }
+
+  private updatePosition(e?: MouseEvent) {
+    const style = this.knob!.style;
+    if (e) {
+      const pos = this.graph.clientToGraph(e.clientX, e.clientY);
+      style.left = `${pos.x}px`;
+      style.top = `${pos.y}px`;
+    } else {
+      style.left = '-1000px';
+      style.top = '-1000px';
+    }
+  }
+
+  private onMouseDown = () => {
+    this.timer = window.setTimeout(() => {
+      this.updatePosition();
+      this.toggleContextMenu(false);
+    }, 200);
+  };
+
+  private onContextMenu({ e }: { e: MouseEvent }) {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = 0;
+    }
+    this.updatePosition(e);
+    this.toggleContextMenu(true);
+  }
+
+  delegateEvents() {
+    this.cellView.on('cell:contextmenu', this.onContextMenu, this);
+    return super.delegateEvents();
+  }
+
+  protected onRemove() {
+    this.cellView.off('cell:contextmenu', this.onContextMenu, this);
+  }
+}
+
+ContextMenuTool.config({
+  tagName: 'div',
+  isSVGElement: false,
+});
+
+export interface ContextMenuToolOptions extends ToolsView.ToolItem.Options {
+  menu: React.ReactElement;
+}
+
+Graph.registerEdgeTool('contextmenu', ContextMenuTool, true);
+Graph.registerNodeTool('contextmenu', ContextMenuTool, true);
+
+Graph.registerConnector(
+  'algo-connector',
+  (s, e) => {
+    const offset = 4;
+    const deltaY = Math.abs(e.y - s.y);
+    const control = Math.floor((deltaY / 3) * 2);
+
+    const v1 = { x: s.x, y: s.y + offset + control };
+    const v2 = { x: e.x, y: e.y - offset - control };
+
+    return Path.normalize(
+      `M ${s.x} ${s.y}
+       L ${s.x} ${s.y + offset}
+       C ${v1.x} ${v1.y} ${v2.x} ${v2.y} ${e.x} ${e.y - offset}
+       L ${e.x} ${e.y}
+      `,
+    );
+  },
+  true,
+);
 
 export interface ModelGraphProps {
   className?: string;
@@ -66,6 +183,9 @@ export const ModelGraph = (props: ModelGraphProps) => {
       minimap: {
         enabled: true,
         container: minimapRef.current,
+      },
+      connecting: {
+        connectionPoint: 'anchor',
       },
     });
 
@@ -157,8 +277,14 @@ const data = [
   {
     id: '3',
     shape: 'extends',
-    source: '2',
-    target: '1',
+    source: {
+      cell: '2',
+      port: 'port1',
+    },
+    target: {
+      cell: '1',
+      port: 'port2',
+    },
   },
   {
     id: '4',
@@ -174,8 +300,14 @@ const data = [
   {
     id: '5',
     shape: 'composition',
-    source: '2',
-    target: '4',
+    source: {
+      cell: '2',
+      port: 'port4',
+    },
+    target: {
+      cell: '4',
+      port: 'port3',
+    },
     label: '1:2',
   },
   {
@@ -203,14 +335,26 @@ const data = [
   {
     id: '8',
     shape: 'extends',
-    source: '2',
-    target: '6',
+    source: {
+      cell: '2',
+      port: 'port2',
+    },
+    target: {
+      cell: '6',
+      port: 'port1',
+    },
   },
   {
     id: '9',
     shape: 'extends',
-    source: '2',
-    target: '7',
+    source: {
+      cell: '2',
+      port: 'port2',
+    },
+    target: {
+      cell: '7',
+      port: 'port1',
+    },
   },
   {
     id: '10',
@@ -226,8 +370,14 @@ const data = [
   {
     id: '11',
     shape: 'implement',
-    source: '6',
-    target: '10',
+    source: {
+      cell: '6',
+      port: 'port2',
+    },
+    target: {
+      cell: '10',
+      port: 'port1',
+    },
   },
   {
     id: '12',
@@ -243,8 +393,14 @@ const data = [
   {
     id: '13',
     shape: 'aggregation',
-    source: '12',
-    target: '6',
+    source: {
+      cell: '12',
+      port: 'port4',
+    },
+    target: {
+      cell: '6',
+      port: 'port3',
+    },
   },
   {
     id: '14',
@@ -260,7 +416,13 @@ const data = [
   {
     id: '15',
     shape: 'association',
-    source: '7',
-    target: '14',
+    source: {
+      cell: '7',
+      port: 'port2',
+    },
+    target: {
+      cell: '14',
+      port: 'port1',
+    },
   },
 ];
